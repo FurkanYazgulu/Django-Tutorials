@@ -6,9 +6,16 @@ from django.views import generic
 from django.utils import timezone
 
 from .models import Choice, Question
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+from django.shortcuts import render, redirect
+from .forms import CustomRegisterForm  # Kendi formumuzu ekledik
+from .models import UserProfile        # Profil modelimizi ekledik
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 
-class IndexView(generic.ListView):
+class IndexView(LoginRequiredMixin, generic.ListView):
     template_name = "polls/index.html"
     context_object_name = "latest_question_list"
 
@@ -20,7 +27,7 @@ class IndexView(generic.ListView):
         return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
 
 
-class DetailView(generic.DetailView):
+class DetailView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = "polls/detail.html"
     
@@ -31,11 +38,11 @@ class DetailView(generic.DetailView):
         return Question.objects.filter(pub_date__lte=timezone.now())
 
 
-class ResultsView(generic.DetailView):
+class ResultsView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = "polls/results.html"
 
-
+@login_required
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     try:
@@ -57,3 +64,17 @@ def vote(request, question_id):
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+
+def register(request):
+    if request.method == "POST":
+        form = CustomRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Kullanıcı başarıyla oluştuğunda, Sınıf bilgisini UserProfile'a kaydediyoruz
+            UserProfile.objects.create(user=user, student_class=form.cleaned_data.get('student_class'))
+            login(request, user)
+            return redirect("polls:index")
+    else:
+        form = CustomRegisterForm()
+    
+    return render(request, "registration/register.html", {"form": form})

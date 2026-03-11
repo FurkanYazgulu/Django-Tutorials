@@ -1,13 +1,59 @@
-{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sivas Cumhuriyet Üniversitesi Anket Sistemi</title>
+    <style>
+        body { background-color: #f0ebf8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; color: #202124; }
+        /* Üst Menü (Navbar) Tasarımı */
+        .navbar { background-color: #673ab7; padding: 15px 30px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .navbar-brand { font-size: 20px; font-weight: bold; text-decoration: none; color: white; }
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+        .nav-links a, .nav-links button { color: white; text-decoration: none; font-weight: 500; background: none; border: none; cursor: pointer; font-size: 16px; padding: 8px 16px; border-radius: 4px; transition: background-color 0.2s; }
+        .nav-links a:hover, .nav-links button:hover { background-color: #512da8; }
+        .logout-btn { background-color: #d32f2f; } /* Çıkış butonu kırmızımsı */
+        .logout-btn:hover { background-color: #b71c1c; }
+        
+        /* İçerik Kartı Tasarımı */
+        .container { max-width: 800px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-top: 8px solid #673ab7;}
+        .header-title { font-size: 24px; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #f0ebf8; padding-bottom: 10px; color: #673ab7; }
+        .poll-list { list-style: none; padding: 0; }
+        .poll-list li { margin-bottom: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; transition: box-shadow 0.2s; }
+        .poll-list li:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .poll-list a { text-decoration: none; color: #202124; font-size: 18px; font-weight: 500; display: block; }
+    </style>
+</head>
+<body>
 
-<link rel="stylesheet" href="{% static 'polls/style.css' %}">
+    <div class="navbar">
+        <a href="{% url 'polls:index' %}" class="navbar-brand">🏫 SCÜ Anket Sistemi</a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <span>Hoş geldin, <strong>{{ user.first_name }} {{ user.last_name }}</strong>!</span>
+                <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Çıkış Yap</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Giriş Yap</a>
+                <a href="{% url 'polls:register' %}" style="background-color: white; color: #673ab7;">Kayıt Ol</a>
+            {% endif %}
+        </div>
+    </div>
 
-{% if latest_question_list %}
-    <ul>
-    {% for question in latest_question_list %}
-        <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No polls are available.</p>
-{% endif %}
+    <div class="container">
+        <div class="header-title">Değerlendirme Anketleri</div>
+        
+        {% if latest_question_list %}
+            <ul class="poll-list">
+            {% for question in latest_question_list %}
+                <li><a href="{% url 'polls:detail' question.id %}">📝 {{ question.question_text }}</a></li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Şu anda aktif bir değerlendirme anketi bulunmamaktadır.</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>
